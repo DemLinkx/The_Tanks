@@ -1,0 +1,77 @@
+body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+    font-family: 'Arial', sans-serif;
+    color: white;
+    text-align: center;
+}
+
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+h1 {
+    font-size: 3.5rem;
+    margin-bottom: 2rem;
+    text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.5);
+    letter-spacing: 3px;
+}
+
+.subtitle {
+    font-size: 1.5rem;
+    margin-bottom: 3rem;
+    text-shadow: 2px 2px 3px rgba(0, 0, 0, 0.5);
+}
+
+.buttons-container {
+    display: flex;
+    gap: 2rem;
+}
+
+.player-btn {
+    padding: 1.2rem 2.5rem;
+    font-size: 1.5rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.player-btn:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+}
+
+.player-btn:active {
+    transform: translateY(0);
+}
+
+#btn-2players {
+    background: linear-gradient(to right, #4e54c8, #8f94fb);
+    color: white;
+}
+
+#btn-3players {
+    background: linear-gradient(to right, #11998e, #38ef7d);
+    color: white;
+}
+
+.tank-icon {
+    font-size: 2rem;
+    margin-left: 10px;
+    vertical-align: middle;
+}

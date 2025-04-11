@@ -1,5 +1,5 @@
-class GameClass{
-    constructor(properties){
+class GameClass {
+    constructor(properties) {
         this.w = properties.w;
         this.h = properties.h;
         this.background = properties.background;
@@ -18,13 +18,13 @@ var GAME = new GameClass({
 
 GameSettings();
 
-function GameSettings(){
+function GameSettings() {
     const urlParams = new URLSearchParams(window.location.search);
     const gameMode = urlParams.get("gamemode");
-    if (gameMode == 'KingButtle'){
+    if (gameMode == 'KingButtle') {
         GAME.isComandGame = false;
     }
-    else if (gameMode == 'TeamGame'){
+    else if (gameMode == 'TeamGame') {
         GAME.isComandGame = true;
     }
 }
@@ -33,8 +33,22 @@ function randomInteger(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 
 }
-
 class Grass {
+    constructor(properties) {
+        this.x = properties.x;
+        this.y = properties.y;
+        this.r = properties.r;
+        this.color = properties.color;
+    }
+    draw(ctx) {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+    }
+}
+
+class Pool {
     constructor(properties) {
         this.x = properties.x;
         this.y = properties.y;
@@ -89,36 +103,36 @@ class TANK {
     DelKeyPressed(event) {
         this.keysPressed[event.code] = false;
     }
-    colissionWithGrass(grass) {
+    colissionWithPool(pool) {
         var tankLeft = this.x - this.size / 2;
         var tankRight = this.x + this.size / 2;
         var tankTop = this.y - this.size / 2;
         var tankBottom = this.y + this.size / 2;
-        var grassLeft = grass.x;
-        var grassRight = grass.x + grass.size;
-        var grassTop = grass.y;
-        var grassBottom = grass.y + grass.size;
+        var poolLeft = pool.x;
+        var poolRight = pool.x + pool.size;
+        var poolTop = pool.y;
+        var poolBottom = pool.y + pool.size;
         var isColliding = (
-            tankRight > grassLeft &&
-            tankLeft < grassRight &&
-            tankBottom > grassTop &&
-            tankTop < grassBottom
+            tankRight > poolLeft &&
+            tankLeft < poolRight &&
+            tankBottom > poolTop &&
+            tankTop < poolBottom
         );
 
         if (isColliding) {
-            var overlapLeft = tankRight - grassLeft;
-            var overlapRight = grassRight - tankLeft;
-            var overlapTop = tankBottom - grassTop;
-            var overlapBottom = grassBottom - tankTop;
+            var overlapLeft = tankRight - poolLeft;
+            var overlapRight = poolRight - tankLeft;
+            var overlapTop = tankBottom - poolTop;
+            var overlapBottom = poolBottom - tankTop;
             var minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
             if (minOverlap === overlapLeft) {
-                this.x = grassLeft - this.size / 2 - 1; // -1 чтобы не "залипать"
+                this.x = poolLeft - this.size / 2 - 1; // -1 чтобы не "залипать"
             } else if (minOverlap === overlapRight) {
-                this.x = grassRight + this.size / 2 + 1;
+                this.x = poolRight + this.size / 2 + 1;
             } else if (minOverlap === overlapTop) {
-                this.y = grassTop - this.size / 2 - 1;
+                this.y = poolTop - this.size / 2 - 1;
             } else if (minOverlap === overlapBottom) {
-                this.y = grassBottom + this.size / 2 + 1;
+                this.y = poolBottom + this.size / 2 + 1;
             }
         }
     }
@@ -202,8 +216,8 @@ class TANK {
 
             }
             for (let i = 0; i < grases.length; i++) {
-                var grass = grases[i];
-                this.colissionWithGrass(grass);
+                var pool = grases[i];
+                this.colissionWithPool(pool);
             }
         }
     }
@@ -287,19 +301,37 @@ canvas.width = GAME.w;
 canvas.height = GAME.h;
 var ctx = canvas.getContext('2d');
 
+var PoolList = [];
 var GrassList = [];
-var GrassCount = randomInteger(10, 25);
-for (let i = 0; i <= GrassCount; i++) {
-    var chastyx = Math.floor(GAME.w / GrassCount);
+var PoolCount = randomInteger(15, 25);
+var GrassCount = randomInteger(15, 25);
+for (let i = 0; i <= PoolCount; i++) {
+    var chastyx = Math.floor(GAME.w / PoolCount);
     var coordx = randomInteger(i * chastyx, (i + 10) * chastyx);
     var coordy = randomInteger((i + 1) * chastyx, (i + 2) * chastyx);
-    var grs = new Grass(
+    var grs = new Pool(
         {
             x: coordx,
             y: coordy,
             size: (1 + Math.random()) * GAME.tank_size,
             color: '#00bfff ',
             armor: randomInteger(10, 100)
+        }
+    );
+    PoolList.push(grs);
+
+}
+
+for (let i = 0; i <= GrassCount; i++) {
+    var Chastyx = Math.floor(GAME.w / GrassCount);
+    var Coordx = randomInteger(i * Chastyx, (i + 10) * Chastyx);
+    var Coordy = randomInteger((i + 1) * Chastyx, (i + 2) * Chastyx);
+    var grs = new Grass(
+        {
+            x: Coordx,
+            y: Coordy,
+            r: (0.5 + Math.random()) * GAME.tank_size,
+            color: '#53704d',
         }
     );
     GrassList.push(grs);
@@ -316,7 +348,7 @@ var player1 = new TANK(true, 100, 800, {
     size: 40,
     speed: 5,
     rotateSpeed: 2,
-    rechargeTime: 0.7,
+    rechargeTime: 0.35,
     opportunityShot: true,
     startAngle: 0,
     dulo: 30,
@@ -333,11 +365,11 @@ var player2 = new TANK(true, 1800, 120, {
     fire: 'Space',
     color: 'green',
     size: 40,
-    speed: 7,
+    speed: 5,
     rotateSpeed: 2,
-    rechargeTime: 0.7,
+    rechargeTime: 0.35,
     opportunityShot: true,
-    startAngle: Math.PI,
+    startAngle: 0,
     dulo: 30,
     BulletV0Speed: 10,
     healph: 10000,
@@ -352,9 +384,9 @@ var player3 = new TANK(true, 100, 180, {
     fire: 'KeyM',
     color: 'white',
     size: 40,
-    speed: 7,
+    speed: 5,
     rotateSpeed: 2,
-    rechargeTime: 0.8,
+    rechargeTime: 0.35,
     opportunityShot: true,
     startAngle: 0,
     dulo: 30,
@@ -373,9 +405,9 @@ var player4 = new TANK(true, 1800, 800, {
     size: 40,
     speed: 5,
     rotateSpeed: 2,
-    rechargeTime: 0.7,
+    rechargeTime: 0.35,
     opportunityShot: true,
-    startAngle: Math.PI,
+    startAngle: 0,
     dulo: 30,
     BulletV0Speed: 10,
     healph: 10000,
@@ -394,18 +426,23 @@ if (GAME.isComandGame) {
         bullets_2 = bullets_2.concat(player1.bullets);
         bullets_2 = bullets_2.concat(player3.bullets);
 
+        for (let i = 0; i <= PoolList.length - 1; i++) {
+            var pool = PoolList[i];
+            pool.draw(ctx);
+        }
+        grs.draw(ctx)
+        player1.update(bullets_1, PoolList);
+        player1.draw(ctx);
+        player2.update(bullets_2, PoolList);
+        player2.draw(ctx);
+        player3.update(bullets_1, PoolList);
+        player3.draw(ctx);
+        player4.update(bullets_2, PoolList);
+        player4.draw(ctx);
         for (let i = 0; i <= GrassList.length - 1; i++) {
             var grass = GrassList[i];
             grass.draw(ctx);
         }
-        player1.update(bullets_1, GrassList);
-        player1.draw(ctx);
-        player2.update(bullets_2, GrassList);
-        player2.draw(ctx);
-        player3.update(bullets_1, GrassList);
-        player3.draw(ctx);
-        player4.update(bullets_2, GrassList);
-        player4.draw(ctx);
     }
 }
 else {
@@ -418,18 +455,22 @@ else {
         bullets = bullets.concat(player3.bullets);
         bullets = bullets.concat(player4.bullets);
 
+        for (let i = 0; i <= PoolList.length - 1; i++) {
+            var pool = PoolList[i];
+            pool.draw(ctx);
+        }
+        player1.update(bullets, PoolList);
+        player1.draw(ctx);
+        player2.update(bullets, PoolList);
+        player2.draw(ctx);
+        player3.update(bullets, PoolList);
+        player3.draw(ctx);
+        player4.update(bullets, PoolList);
+        player4.draw(ctx);
         for (let i = 0; i <= GrassList.length - 1; i++) {
             var grass = GrassList[i];
             grass.draw(ctx);
         }
-        player1.update(bullets, GrassList);
-        player1.draw(ctx);
-        player2.update(bullets, GrassList);
-        player2.draw(ctx);
-        player3.update(bullets, GrassList);
-        player3.draw(ctx);
-        player4.update(bullets, GrassList);
-        player4.draw(ctx);
     }
 }
 

@@ -161,16 +161,16 @@ class TANK {
                 bullet.update();
             });
             if (this.x <= 0) {
-                this.x = 0;
+                this.x = GAME.w - 1;
             }
             if (this.y <= 0) {
-                this.y = 0;
+                this.y = GAME.h - 1;
             }
             if (this.x >= GAME.w) {
-                this.x = GAME.w;
+                this.x = 0;
             }
             if (this.y >= GAME.h) {
-                this.y = GAME.h;
+                this.y = 0;
             }
 
             if (this.keysPressed[this.controls.up]) {
@@ -212,6 +212,9 @@ class TANK {
                         this.color = 'black';
                         this.isActive = false;
                     }
+                    enemyBullets.splice(i, 1);
+                    i--;
+                    console.log(this.color, 'a?');
                 }
 
             }

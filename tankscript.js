@@ -8,31 +8,6 @@ class GameClass {
     }
 }
 
-var GAME = new GameClass({
-    w: 1900,
-    h: 935,
-    background: '#fc9',
-    tank_size: 40,
-    isComandGame: false
-});
-
-GameSettings();
-
-function GameSettings() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const gameMode = urlParams.get("gamemode");
-    if (gameMode == 'KingButtle') {
-        GAME.isComandGame = false;
-    }
-    else if (gameMode == 'TeamGame') {
-        GAME.isComandGame = true;
-    }
-}
-
-function randomInteger(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-
-}
 class Grass {
     constructor(properties) {
         this.x = properties.x;
@@ -48,7 +23,7 @@ class Grass {
     }
 }
 
-class Pool {
+class Wall {
     constructor(properties) {
         this.x = properties.x;
         this.y = properties.y;
@@ -62,6 +37,17 @@ class Pool {
         ctx.strokeStyle = 'black';
         ctx.lineWidth = 4;
         ctx.fillRect(this.x, this.y, this.size, this.size);
+    }
+    colissionWithBullets(enemyBullets) {
+        for (let i = 0; i < enemyBullets.length; i++) {
+            var EnemyObject = enemyBullets[i];
+            var InWallx = ((EnemyObject.x + EnemyObject.r) <= (this.x + this.size)) && ((EnemyObject.x + EnemyObject.r) >= this.x);
+            var InWally = ((EnemyObject.y + EnemyObject.r) <= (this.y + this.size)) && ((EnemyObject.y + EnemyObject.r) >= this.y);
+            if (InWallx && InWally) {
+                EnemyObject.owner.bullets = EnemyObject.owner.bullets.filter(b => b.id !== EnemyObject.id);
+            };
+
+        }
     }
 }
 
@@ -105,41 +91,41 @@ class TANK {
     DelKeyPressed(event) {
         this.keysPressed[event.code] = false;
     }
-    colissionWithPool(pool) {
+    colissionWithWall(wall) {
         var tankLeft = this.x - this.size / 2;
         var tankRight = this.x + this.size / 2;
         var tankTop = this.y - this.size / 2;
         var tankBottom = this.y + this.size / 2;
-        var poolLeft = pool.x;
-        var poolRight = pool.x + pool.size;
-        var poolTop = pool.y;
-        var poolBottom = pool.y + pool.size;
+        var wallLeft = wall.x;
+        var wallRight = wall.x + wall.size;
+        var wallTop = wall.y;
+        var wallBottom = wall.y + wall.size;
         var isColliding = (
-            tankRight > poolLeft &&
-            tankLeft < poolRight &&
-            tankBottom > poolTop &&
-            tankTop < poolBottom
+            tankRight > wallLeft &&
+            tankLeft < wallRight &&
+            tankBottom > wallTop &&
+            tankTop < wallBottom
         );
 
         if (isColliding) {
-            var overlapLeft = tankRight - poolLeft;
-            var overlapRight = poolRight - tankLeft;
-            var overlapTop = tankBottom - poolTop;
-            var overlapBottom = poolBottom - tankTop;
+            var overlapLeft = tankRight - wallLeft;
+            var overlapRight = wallRight - tankLeft;
+            var overlapTop = tankBottom - wallTop;
+            var overlapBottom = wallBottom - tankTop;
             var minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
             if (minOverlap === overlapLeft) {
-                this.x = poolLeft - this.size / 2 - 1; // -1 чтобы не "залипать"
+                this.x = wallLeft - this.size / 2 - 1; // -1 чтобы не "залипать"
             } else if (minOverlap === overlapRight) {
-                this.x = poolRight + this.size / 2 + 1;
+                this.x = wallRight + this.size / 2 + 1;
             } else if (minOverlap === overlapTop) {
-                this.y = poolTop - this.size / 2 - 1;
+                this.y = wallTop - this.size / 2 - 1;
             } else if (minOverlap === overlapBottom) {
-                this.y = poolBottom + this.size / 2 + 1;
+                this.y = wallBottom + this.size / 2 + 1;
             }
         }
     }
 
-    update(enemyBullets, grases) {
+    update(enemyBullets, walls) {
         if (!this.isActive) {
             this.bullets.forEach(bullet => bullet.update());
             this.bullets = this.bullets.filter((bullet) => {
@@ -209,9 +195,9 @@ class TANK {
                 }
 
             }
-            for (let i = 0; i < grases.length; i++) {
-                var pool = grases[i];
-                this.colissionWithPool(pool);
+            for (let i = 0; i < walls.length; i++) {
+                var wall = walls[i];
+                this.colissionWithWall(wall);
             }
         }
     }
@@ -282,7 +268,7 @@ class TANK {
 class BULLET {
     constructor(id, x, y, r, properties) {
         this.id = id,
-            this.x = x;
+        this.x = x;
         this.y = y;
         this.r = r;
         this.color = properties.color;
@@ -306,20 +292,46 @@ class BULLET {
     }
 }
 
+var GAME = new GameClass({
+    w: 1900,
+    h: 935,
+    background: '#fc9',
+    tank_size: 40,
+    isComandGame: false
+});
+
+GameSettings();
+
+function GameSettings() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const gameMode = urlParams.get("gamemode");
+    if (gameMode == 'KingButtle') {
+        GAME.isComandGame = false;
+    }
+    else if (gameMode == 'TeamGame') {
+        GAME.isComandGame = true;
+    }
+}
+
+function randomInteger(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+
+}
+
 var canvas = document.getElementById('canvas');
 canvas.width = GAME.w;
 canvas.height = GAME.h;
 var ctx = canvas.getContext('2d');
 
-var PoolList = [];
+var WallList = [];
 var GrassList = [];
-var PoolCount = randomInteger(15, 25);
+var WallCount = randomInteger(15, 25);
 var GrassCount = randomInteger(15, 25);
-for (let i = 0; i <= PoolCount; i++) {
-    var chastyx = Math.floor(GAME.w / PoolCount);
+for (let i = 0; i <= WallCount; i++) {
+    var chastyx = Math.floor(GAME.w / WallCount);
     var coordx = randomInteger(i * chastyx, (i + 10) * chastyx);
     var coordy = randomInteger((i + 1) * chastyx, (i + 2) * chastyx);
-    var grs = new Pool(
+    var grs = new Wall(
         {
             x: coordx,
             y: coordy,
@@ -328,7 +340,7 @@ for (let i = 0; i <= PoolCount; i++) {
             armor: randomInteger(10, 100)
         }
     );
-    PoolList.push(grs);
+    WallList.push(grs);
 
 }
 
@@ -436,18 +448,18 @@ if (GAME.isComandGame) {
         bullets_2 = bullets_2.concat(player1.bullets);
         bullets_2 = bullets_2.concat(player3.bullets);
 
-        for (let i = 0; i <= PoolList.length - 1; i++) {
-            var pool = PoolList[i];
-            pool.draw(ctx);
+        for (let i = 0; i <= WallList.length - 1; i++) {
+            var wall = WallList[i];
+            wall.draw(ctx);
         }
         grs.draw(ctx)
-        player1.update(bullets_1, PoolList);
+        player1.update(bullets_1, WallList);
         player1.draw(ctx);
-        player2.update(bullets_2, PoolList);
+        player2.update(bullets_2, WallList);
         player2.draw(ctx);
-        player3.update(bullets_1, PoolList);
+        player3.update(bullets_1, WallList);
         player3.draw(ctx);
-        player4.update(bullets_2, PoolList);
+        player4.update(bullets_2, WallList);
         player4.draw(ctx);
         for (let i = 0; i <= GrassList.length - 1; i++) {
             var grass = GrassList[i];
@@ -464,17 +476,18 @@ else {
         bullets = bullets.concat(player2.bullets);
         bullets = bullets.concat(player3.bullets);
         bullets = bullets.concat(player4.bullets);
-        for (let i = 0; i <= PoolList.length - 1; i++) {
-            var pool = PoolList[i];
-            pool.draw(ctx);
+        for (let i = 0; i <= WallList.length - 1; i++) {
+            var wall = WallList[i];
+            wall.draw(ctx);
+            wall.colissionWithBullets(bullets);
         }
-        player1.update(bullets, PoolList);
+        player1.update(bullets, WallList);
         player1.draw(ctx);
-        player2.update(bullets, PoolList);
+        player2.update(bullets, WallList);
         player2.draw(ctx);
-        player3.update(bullets, PoolList);
+        player3.update(bullets, WallList);
         player3.draw(ctx);
-        player4.update(bullets, PoolList);
+        player4.update(bullets, WallList);
         player4.draw(ctx);
         for (let i = 0; i <= GrassList.length - 1; i++) {
             var grass = GrassList[i];

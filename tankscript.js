@@ -66,7 +66,8 @@ class Pool {
 }
 
 class TANK {
-    constructor(isActive, x, y, controls) {
+    constructor(id, isActive, x, y, controls) {
+        this.id = id
         this.isActive = isActive;
         this.x = x;
         this.y = y;
@@ -86,6 +87,7 @@ class TANK {
         this.keysPressed = {};
         this.BulletV0Speed = controls.BulletV0Speed;
         this.BulletDamage = controls.BulletDamage;
+        this.bullets_count = 0
         if (!this.isActive) {
             this.color = ' black'
         }
@@ -139,27 +141,18 @@ class TANK {
 
     update(enemyBullets, grases) {
         if (!this.isActive) {
-            this.bullets.forEach((bullet, index, bullets) => {
-                var in_xs = (0 <= bullet.x) && (bullet.x <= GAME.w);
-                var in_ys = (0 <= bullet.y) && (bullet.y <= GAME.h);
-                if (!(in_xs && in_ys)) {
-                    bullets.splice(index, 1);
-                    return;
-                }
-                bullet.update();
+            this.bullets.forEach(bullet => bullet.update());
+            this.bullets = this.bullets.filter((bullet) => {
+                return !this.removeBullet(bullet);
             });
 
         }
         if (this.isActive) {
-            this.bullets.forEach((bullet, index, bullets) => {
-                var in_xs = (0 <= bullet.x) && (bullet.x <= GAME.w);
-                var in_ys = (0 <= bullet.y) && (bullet.y <= GAME.h);
-                if (!(in_xs && in_ys)) {
-                    bullets.splice(index, 1);
-                    return;
-                }
-                bullet.update();
+            this.bullets.forEach(bullet => bullet.update());
+            this.bullets = this.bullets.filter((bullet) => {
+                return !this.removeBullet(bullet);
             });
+
             if (this.x <= 0) {
                 this.x = GAME.w - 1;
             }
@@ -212,9 +205,7 @@ class TANK {
                         this.color = 'black';
                         this.isActive = false;
                     }
-                    enemyBullets.splice(i, 1);
-                    i--;
-                    console.log(this.color, 'a?');
+                    EnemyObject.owner.bullets = EnemyObject.owner.bullets.filter(b => b.id !== EnemyObject.id);
                 }
 
             }
@@ -224,17 +215,30 @@ class TANK {
             }
         }
     }
+
+    removeBullet(bullet, bullet_id = null) {
+        const in_xs = (0 <= bullet.x) && (bullet.x <= GAME.w);
+        const in_ys = (0 <= bullet.y) && (bullet.y <= GAME.h);
+        if (!(in_xs && in_ys) || (bullet_id && bullet.id === bullet_id)) {
+            return true;
+        }
+        return false;
+    }
+
     shoot(BullSpeed) {
         if (this.opportunityShot) {
             this.opportunityShot = false;
             setTimeout(() => { this.opportunityShot = true; }, this.rechargeTime);
             var BulShotCoordx = this.x + Math.cos(this.angle) * (this.dulo + this.size - 2);
             var BulShotCoordy = this.y - (this.dulo + this.size - 2) * Math.sin(-this.angle);
-            var BulShot = new BULLET(BulShotCoordx, BulShotCoordy, 5, {
+            this.bullets_count = this.bullets_count + 1;
+            var _id_ = String(this.id) + "#" + String(this.bullets_count);
+            var BulShot = new BULLET(_id_, BulShotCoordx, BulShotCoordy, 5, {
                 color: 'black',
                 speed: BullSpeed + this.BulletV0Speed,
                 angle: this.angle,
                 damage: this.BulletDamage,
+                owner: this,
             })
             this.bullets.push(BulShot);
         }
@@ -276,15 +280,18 @@ class TANK {
 }
 
 class BULLET {
-    constructor(x, y, r, properties) {
-        this.x = x;
+    constructor(id, x, y, r, properties) {
+        this.id = id,
+            this.x = x;
         this.y = y;
         this.r = r;
         this.color = properties.color;
         this.speed = properties.speed;
         this.angle = properties.angle;
         this.damage = properties.damage;
+        this.owner = properties.owner;
     }
+
     draw(ctx) {
         ctx.fillStyle = this.color;
         ctx.beginPath();
@@ -341,7 +348,7 @@ for (let i = 0; i <= GrassCount; i++) {
 
 }
 
-var player1 = new TANK(true, 100, 800, {
+var player1 = new TANK(1, true, 100, 800, {
     up: 'ArrowUp',
     down: 'ArrowDown',
     left: 'ArrowLeft',
@@ -360,7 +367,7 @@ var player1 = new TANK(true, 100, 800, {
     BulletDamage: 100
 });
 
-var player2 = new TANK(true, 1800, 120, {
+var player2 = new TANK(2, true, 1800, 120, {
     up: 'KeyW',
     down: 'KeyS',
     left: 'KeyA',
@@ -370,7 +377,7 @@ var player2 = new TANK(true, 1800, 120, {
     size: 40,
     speed: 5,
     rotateSpeed: 2,
-    rechargeTime: 0.35,
+    rechargeTime: 0.1,
     opportunityShot: true,
     startAngle: 0,
     dulo: 30,
@@ -379,7 +386,7 @@ var player2 = new TANK(true, 1800, 120, {
     BulletDamage: 100
 });
 
-var player3 = new TANK(true, 100, 180, {
+var player3 = new TANK(3, true, 100, 180, {
     up: 'KeyU',
     down: 'KeyJ',
     left: 'KeyH',
@@ -398,7 +405,7 @@ var player3 = new TANK(true, 100, 180, {
     BulletDamage: 100
 });
 
-var player4 = new TANK(true, 1800, 800, {
+var player4 = new TANK(4, true, 1800, 800, {
     up: 'Numpad8',
     down: 'Numpad5',
     left: 'Numpad4',
@@ -457,7 +464,6 @@ else {
         bullets = bullets.concat(player2.bullets);
         bullets = bullets.concat(player3.bullets);
         bullets = bullets.concat(player4.bullets);
-
         for (let i = 0; i <= PoolList.length - 1; i++) {
             var pool = PoolList[i];
             pool.draw(ctx);

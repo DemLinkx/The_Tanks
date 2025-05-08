@@ -80,6 +80,21 @@ class TANK {
         this.EventProcessing();
     }
 
+    applyBonus(property, value, duration = 0) {
+        if (this.hasOwnProperty(property)) {
+            const originalValue = this[property];
+            this[property] = value;
+
+            if (duration > 0) {
+                setTimeout(() => {
+                    if (this.isActive) { this[property] = originalValue; }
+                }, duration);
+            }
+        } else {
+            console.error(`Свойство "${property}" не найдено`);
+        }
+    }
+
     EventProcessing() {
         document.addEventListener('keydown', (event) => this.AddKeyPressed(event));
         document.addEventListener('keyup', (event) => this.DelKeyPressed(event));
@@ -293,8 +308,8 @@ class BULLET {
 }
 
 var GAME = new GameClass({
-    w: 1900,
-    h: 935,
+    w: window.innerWidth,
+    h: innerHeight,
     background: '#fc9',
     tank_size: 40,
     isComandGame: false
@@ -317,6 +332,19 @@ function randomInteger(min, max) {
 
 }
 
+let lastBonusTime = Date.now();
+const bonusInterval = 10000; // длительность бонуса в мс
+
+function applyRandomBonus() {
+    const activeTanks = [player1, player2, player3, player4].filter(tank => tank.isActive);
+    const _bonuses_ = ['healph', 'speed', 'BulletDamage']
+    if (activeTanks.length === 0) return;
+    const randomTank = activeTanks[Math.floor(Math.random() * activeTanks.length)];
+    const randomBonus = _bonuses_[Math.floor(Math.random() * _bonuses_.length)];
+    randomTank.applyBonus(randomBonus, randomTank[randomBonus] * 1.35, 10000);
+    randomTank.applyBonus('color', 'gold', 1000);
+    console.log(`Бонус ${randomBonus} применён к танку ${randomTank.id}`);
+}
 var canvas = document.getElementById('canvas');
 canvas.width = GAME.w;
 canvas.height = GAME.h;
@@ -435,8 +463,15 @@ var player4 = new TANK(4, true, 1800, 800, {
     BulletDamage: 100
 });
 
+// const Bonuses = {
+//     heal: (tank) => tank.applyBonus('healph', tank.healph + 1000, 5000),
+//     speedBoost: (tank) => tank.applyBonus('speed', tank.speed * 2, 5000),
+//     damageBoost: (tank) => tank.applyBonus('BulletDamage', tank.BulletDamage * 3, 5000)
+// };
+
 if (GAME.isComandGame) {
     function UpdateFrame(ctx) {
+
         ctx.clearRect(0, 0, GAME.w, GAME.h);
         drawBackground(ctx);
         var bullets_1 = [];
@@ -504,6 +539,11 @@ function drawBackground(ctx) {
 
 function Game() {
     UpdateFrame(ctx);
+    const currentTime = Date.now();
+    if (currentTime - lastBonusTime >= bonusInterval) {
+        applyRandomBonus();
+        lastBonusTime = currentTime;
+    }
     requestAnimationFrame(Game);
 }
 Game();

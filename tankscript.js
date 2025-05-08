@@ -310,6 +310,7 @@ function GameSettings() {
         GAME.isComandGame = true;
     }
 }
+GameSettings();
 
 function randomInteger(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -334,7 +335,7 @@ for (let i = 0; i <= WallCount; i++) {
             x: coordx,
             y: coordy,
             size: (1 + Math.random()) * GAME.tank_size,
-            color: '#00bfff ',
+            color: '#a3a7a5',
             armor: randomInteger(10, 100)
         }
     );
@@ -445,6 +446,7 @@ if (GAME.isComandGame) {
         bullets_1 = bullets_1.concat(player4.bullets);
         bullets_2 = bullets_2.concat(player1.bullets);
         bullets_2 = bullets_2.concat(player3.bullets);
+        var bullets = bullets_1.concat(bullets_2)
 
         for (let i = 0; i <= WallList.length - 1; i++) {
             var wall = WallList[i];
@@ -504,5 +506,4 @@ function Game() {
     UpdateFrame(ctx);
     requestAnimationFrame(Game);
 }
-GameSettings();
 Game();

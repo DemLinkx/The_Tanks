@@ -268,7 +268,7 @@ class TANK {
 class BULLET {
     constructor(id, x, y, r, properties) {
         this.id = id,
-        this.x = x;
+            this.x = x;
         this.y = y;
         this.r = r;
         this.color = properties.color;
@@ -299,8 +299,6 @@ var GAME = new GameClass({
     tank_size: 40,
     isComandGame: false
 });
-
-GameSettings();
 
 function GameSettings() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -451,6 +449,7 @@ if (GAME.isComandGame) {
         for (let i = 0; i <= WallList.length - 1; i++) {
             var wall = WallList[i];
             wall.draw(ctx);
+            wall.colissionWithBullets(bullets);
         }
         grs.draw(ctx)
         player1.update(bullets_1, WallList);
@@ -505,5 +504,5 @@ function Game() {
     UpdateFrame(ctx);
     requestAnimationFrame(Game);
 }
-
+GameSettings();
 Game();
